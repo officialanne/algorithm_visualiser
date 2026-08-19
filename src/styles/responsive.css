@@ -1,0 +1,5 @@
+@media (max-width: 768px) {
+  .app {
+    width: min(100% - 1rem, 1200px);
+  }
+}

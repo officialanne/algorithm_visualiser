@@ -1,0 +1,39 @@
+# Algorithm Visualizer
+
+Interactive web application for visualizing classic algorithms
+and data structures.
+
+## Project Status
+
+Phase 1 — Foundation
+
+## Tech Stack
+
+- HTML5
+- CSS3
+- JavaScript ES6+
+- Vite
+- npm
+- ESLint
+- Prettier
+
+## Planned Features
+
+- Sorting visualizations
+- Searching visualizations
+- Stack simulator
+- Queue simulator
+- Algorithm complexity information
+- Animation controls
+- Responsive interface
+- Accessibility support
+- Automated testing
+- CI/CD
+- GitHub Pages deployment
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
