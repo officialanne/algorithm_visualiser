@@ -1,0 +1,1235 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+scripts/
+  checkAlgorithms.js
+src/
+  algorithms/
+    dataStructures/
+      queue.js
+      stack.js
+    searching/
+      binarySearch.js
+      linearSearch.js
+    sorting/
+      bubbleSort.js
+      insertionSort.js
+      selectionSort.js
+  components/
+    controls.js
+    toolbar.js
+  controllers/
+    appController.js
+  state/
+    appState.js
+    settings.js
+  styles/
+    components.css
+    layout.css
+    main.css
+    responsive.css
+    variables.css
+  utils/
+    generateRandomArray.js
+  visualization/
+    arrayVisualizer.js
+    sortingVisualizer.js
+  main.js
+.editorconfig
+.gitignore
+.prettierrc
+eslint.config.js
+index.html
+LICENSE
+package.json
+README
+vite.config.js
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="scripts/checkAlgorithms.js">
+// checking that the algorithm modules work before building the visual interface
+
+// import the modules
+import { bubbleSort } from "../src/algorithms/sorting/bubbleSort.js";
+import { selectionSort } from "../src/algorithms/sorting/selectionSort.js";
+import { insertionSort } from "../src/algorithms/sorting/insertionSort.js";
+
+import { linearSearch } from "../src/algorithms/searching/linearSearch.js";
+import { binarySearch } from "../src/algorithms/searching/binarySearch.js";
+
+import { Stack } from "../src/algorithms/dataStructures/stack.js";
+import { Queue } from "../src/algorithms/dataStructures/queue.js";
+
+const array = [5, 2, 8, 1, 4];
+
+// run the modules and print their resuls
+console.log("Bubble Sort:", bubbleSort(array));
+console.log("Selection Sort:", selectionSort(array));
+console.log("Insertion Sort:", insertionSort(array));
+
+console.log("Linear Search:", linearSearch(array, 8));
+
+const sortedArray = [1, 2, 4, 5, 8];
+
+console.log("Binary Search:", binarySearch(sortedArray, 5));
+
+const stack = new Stack();
+
+stack.push(10);
+stack.push(20);
+stack.push(30);
+
+console.log("Stack:", stack.toArray());
+console.log("Stack pop:", stack.pop());
+console.log("Stack:", stack.toArray());
+
+const queue = new Queue();
+
+queue.enqueue(10);
+queue.enqueue(20);
+queue.enqueue(30);
+
+console.log("Queue:", queue.toArray());
+console.log("Queue dequeue:", queue.dequeue());
+console.log("Queue:", queue.toArray());
+</file>
+
+<file path="src/algorithms/dataStructures/queue.js">
+export class Queue {
+  constructor() {
+    this.items = [];
+  }
+
+  // add an item to the end of the queue
+  enqueue(value) {
+    this.items.push(value);
+  }
+
+  // remove an item from the front of the queue
+  dequeue() {
+    // using shift to move hte remaining array elements
+    return this.items.shift();
+  }
+
+  front() {
+    return this.items[0];
+  }
+
+  isEmpty() {
+    return this.items.length === 0;
+  }
+
+  size() {
+    return this.items.length;
+  }
+
+  clear() {
+    this.items = [];
+  }
+
+  toArray() {
+    return [...this.items];
+  }
+}
+</file>
+
+<file path="src/algorithms/dataStructures/stack.js">
+// creates a class (a blueprint for creating objects iwth data + behaviour) - modelling the Stack abstration
+export class Stack {
+  constructor() {
+    this.items = [];
+  }
+
+  // adds an item to the top of the stack
+  push(value) {
+    this.items.push(value);
+  }
+
+  // removes the last item from the stack
+  pop() {
+    return this.items.pop();
+  }
+
+  peek() {
+    return this.items[this.items.length - 1];
+  }
+
+  isEmpty() {
+    return this.items.length === 0;
+  }
+
+  size() {
+    return this.items.length;
+  }
+
+  clear() {
+    this.items = [];
+  }
+
+  toArray() {
+    return [...this.items];
+  }
+}
+</file>
+
+<file path="src/algorithms/searching/binarySearch.js">
+export function binarySearch(array, target) {
+  const steps = [];
+
+  let low = 0;
+  let high = array.length - 1;
+
+  while (low <= high) {
+    // calculates the middle index, which needs to be a whole number so is rounded down
+    const middle = Math.floor((low + high) / 2);
+
+    steps.push({
+      type: "check",
+      indices: [low, middle, high],
+    });
+
+    if (array[middle] === target) {
+      steps.push({
+        type: "found",
+        index: middle,
+      });
+
+      return {
+        index: middle,
+        steps,
+      };
+    }
+
+    if (array[middle] < target) {
+      low = middle + 1;
+    } else {
+      high = middle - 1;
+    }
+  }
+
+  steps.push({
+    type: "notFound",
+  });
+
+  return {
+    index: -1,
+    steps,
+  };
+}
+</file>
+
+<file path="src/algorithms/searching/linearSearch.js">
+export function linearSearch(array, target) {
+  const steps = [];
+
+  for (let i = 0; i < array.length; i += 1) {
+    steps.push({
+      type: "check",
+      index: i,
+    });
+
+    if (array[i] === target) {
+      steps.push({
+        type: "found",
+        index: i,
+      });
+
+      return {
+        index: i,
+        steps,
+      };
+    }
+  }
+
+  steps.push({
+    type: "notFound",
+  });
+
+  // return -1 as an invalid index if the target is not found
+  return {
+    index: -1,
+    steps,
+  };
+}
+</file>
+
+<file path="src/components/controls.js">
+export function getControls() {
+  return {
+    generateButton: document.querySelector("#generate-btn"),
+    startButton: document.querySelector("#start-btn"),
+    pauseButton: document.querySelector("#pause-btn"),
+    resetButton: document.querySelector("#reset-btn"),
+
+    algorithmSelect: document.querySelector("#algorithm-select"),
+
+    speedSlider: document.querySelector("#speed-slider"),
+
+    speedValue: document.querySelector("#speed-value"),
+  };
+}
+</file>
+
+<file path="src/components/toolbar.js">
+export function createToolbar() {
+  return `
+    <div class="toolbar__row">
+
+      <button id="generate-btn" type="button">
+        Generate
+      </button>
+
+      <button id="start-btn" type="button">
+        Start
+      </button>
+
+      <button id="pause-btn" type="button" disabled>
+        Pause
+      </button>
+
+      <button id="reset-btn" type="button">
+        Reset
+      </button>
+
+    </div>
+
+    <div class="toolbar__row">
+
+      <label for="algorithm-select">
+        Algorithm
+
+        <select id="algorithm-select">
+
+          <option value="bubble">
+            Bubble Sort
+          </option>
+
+          <option value="selection">
+            Selection Sort
+          </option>
+
+          <option value="insertion">
+            Insertion Sort
+          </option>
+
+        </select>
+      </label>
+
+      <label for="speed-slider">
+        Speed
+
+        <input
+          id="speed-slider"
+          type="range"
+          min="1"
+          max="10"
+          step="1"
+          value="5"
+        >
+        
+        <span id="speed-value">5</span>
+
+      </label>
+
+    </div>
+  `;
+}
+</file>
+
+<file path="src/controllers/appController.js">
+import { generateRandomArray } from "../utils/generateRandomArray.js";
+
+import { renderArray } from "../visualization/arrayVisualizer.js";
+import { visualizeSorting } from "../visualization/sortingVisualizer.js";
+
+import { bubbleSort } from "../algorithms/sorting/bubbleSort.js";
+import { selectionSort } from "../algorithms/sorting/selectionSort.js";
+import { insertionSort } from "../algorithms/sorting/insertionSort.js";
+
+const algorithms = {
+  bubble: bubbleSort,
+  selection: selectionSort,
+  insertion: insertionSort,
+};
+
+export function createAppController({ container, controls }) {
+  const state = {
+    values: generateRandomArray(),
+    algorithm: "bubble",
+    speed: 5,
+    running: false,
+  };
+
+  function render() {
+    renderArray(container, state.values);
+  }
+
+  function generate() {
+    if (state.running) {
+      return;
+    }
+
+    state.values = generateRandomArray();
+
+    render();
+  }
+
+  function changeAlgorithm(event) {
+    if (state.running) {
+      return;
+    }
+
+    state.algorithm = event.target.value;
+  }
+
+  function changeSpeed(event) {
+    state.speed = Number(event.target.value);
+    controls.speedValue.textContent = state.speed;
+  }
+
+  async function start() {
+    if (state.running) {
+      return;
+    }
+
+    state.running = true;
+
+    setControlsDisabled(true);
+
+    const algorithm = algorithms[state.algorithm];
+
+    const delay = speedToDelay(state.speed);
+
+    await visualizeSorting(container, state.values, algorithm, delay);
+
+    state.running = false;
+
+    setControlsDisabled(false);
+  }
+
+  function reset() {
+    if (state.running) {
+      return;
+    }
+
+    render();
+  }
+
+  function setControlsDisabled(disabled) {
+    controls.generateButton.disabled = disabled;
+    controls.startButton.disabled = disabled;
+    controls.resetButton.disabled = disabled;
+    controls.algorithmSelect.disabled = disabled;
+    controls.speedSlider.disabled = disabled;
+  }
+
+  controls.generateButton.addEventListener("click", generate);
+
+  controls.startButton.addEventListener("click", start);
+
+  controls.resetButton.addEventListener("click", reset);
+
+  controls.algorithmSelect.addEventListener("change", changeAlgorithm);
+
+  controls.speedSlider.addEventListener("input", changeSpeed);
+
+  render();
+
+  return {
+    state,
+  };
+}
+
+function speedToDelay(speed) {
+  return 1050 - speed * 100;
+}
+</file>
+
+<file path="src/state/appState.js">
+export const appState = {
+  values: [],
+  running: false,
+  paused: false,
+};
+</file>
+
+<file path="src/state/settings.js">
+export const settings = {
+  algorithm: "bubble",
+  animationSpeed: 300,
+};
+</file>
+
+<file path="src/styles/main.css">
+@import "./variables.css";
+@import "./layout.css";
+@import "./components.css";
+@import "./responsive.css";
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: var(--font-family);
+  background: var(--color-background);
+  color: var(--color-text);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+}
+</file>
+
+<file path="src/styles/variables.css">
+:root {
+  --color-background: #f8fafc;
+  --color-surface: #ffffff;
+  --color-text: #0f172a;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+
+  --color-primary: #2563eb;
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #dc2626;
+
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+
+  --font-family:
+    Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+
+  --transition-fast: 150ms ease;
+  --transition-normal: 250ms ease;
+}
+</file>
+
+<file path="src/utils/generateRandomArray.js">
+// generate arrays automatically
+export function generateRandomArray(size = 20, min = 5, max = 50) {
+  // generate an array of a specified length
+  return Array.from(
+    { length: size },
+    () => Math.floor(Math.random() * (max - min + 1)) + min,
+  );
+}
+</file>
+
+<file path="src/visualization/arrayVisualizer.js">
+// turn the HTML into visual bars
+export function renderArray(container, values, state = {}) {
+  container.innerHTML = "";
+
+  values.forEach((value, index) => {
+    // create a new HTML div element
+    const bar = document.createElement("div");
+
+    // add the CSS class to each element
+    bar.classList.add("array-bar");
+
+    bar.style.height = `${value * 10}px`;
+
+    // produces HTML attributes to store small custom information to identify each bar
+    bar.dataset.index = index;
+    bar.dataset.value = value;
+
+    if (state.comparing?.includes(index)) {
+      // add to a class representing the element being currently compared
+      bar.classList.add("is-comparing");
+    }
+
+    if (state.swapping?.includes(index)) {
+      bar.classList.add("is-swapping");
+    }
+
+    if (state.sorted?.includes(index)) {
+      bar.classList.add("is-sorted");
+    }
+
+    // puts the element into the document
+    container.appendChild(bar);
+  });
+}
+</file>
+
+<file path="src/visualization/sortingVisualizer.js">
+import { renderArray } from "./arrayVisualizer.js";
+
+// perfoming asynchronous work and using a 300ms delay
+// allows polymorphism through the algorithm parameter
+export async function visualizeSorting(
+  container,
+  values,
+  algorithm,
+  delay = 300,
+) {
+  const result = algorithm(values);
+
+  renderArray(container, values);
+
+  for (const step of result.steps) {
+    if (step.type === "compare") {
+      renderArray(container, step.values, {
+        comparing: step.indices,
+      });
+
+      // pause the function for 300ms until wait() has finished, and the browser remains responsive
+      await wait(delay);
+    }
+
+    if (step.type === "swap") {
+      renderArray(container, step.values, {
+        swapping: step.indices,
+      });
+
+      await wait(delay);
+    }
+
+    if (step.type === "minimum") {
+      renderArray(container, step.values, {
+        comparing: [step.index],
+      });
+
+      await wait(delay);
+    }
+
+    if (step.type === "shift") {
+      renderArray(container, step.values, {
+        swapping: step.indices,
+      });
+
+      await wait(delay);
+    }
+
+    if (step.type === "insert") {
+      renderArray(container, step.values, {
+        comparing: [step.index],
+      });
+
+      await wait(delay);
+    }
+
+    if (step.type === "complete") {
+      renderArray(container, step.values, {
+        sorted: step.values.map((_, index) => index),
+      });
+    }
+  }
+
+  return result;
+}
+
+function wait(milliseconds) {
+  // create a promise, wait for a setTimeout, resolve hte promise, await continues
+  return new Promise((resolve) => {
+    setTimeout(resolve, milliseconds);
+  });
+}
+</file>
+
+<file path=".editorconfig">
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+</file>
+
+<file path=".gitignore">
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Other
+node_modules/
+dist/
+.DS_Store
+.env
+.env.*
+!.env.example
+.vscode/
+.idea/
+</file>
+
+<file path=".prettierrc">
+{
+  "semi": true,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "printWidth": 80
+}
+</file>
+
+<file path="README">
+# Algorithm Visualizer
+
+Interactive web application for visualizing classic algorithms
+and data structures.
+
+## Project Status
+
+Phase 1 — Foundation
+
+## Tech Stack
+
+- HTML5
+- CSS3
+- JavaScript ES6+
+- Vite
+- npm
+- ESLint
+- Prettier
+
+## Planned Features
+
+- Sorting visualizations
+- Searching visualizations
+- Stack simulator
+- Queue simulator
+- Algorithm complexity information
+- Animation controls
+- Responsive interface
+- Accessibility support
+- Automated testing
+- CI/CD
+- GitHub Pages deployment
+
+## Local Development
+
+```bash
+npm install
+npm run dev
+```
+</file>
+
+<file path="vite.config.js">
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  base: "./",
+});
+</file>
+
+<file path="src/algorithms/sorting/bubbleSort.js">
+// using export allows another JavaScript file to import and use this function
+export function bubbleSort(array) {
+  // copy the values using spread syntax to mutate the original data
+  const values = [...array];
+
+  // create an empty array to store what happens at each step, separating logic from visualisation
+  const steps = [];
+
+  // an outer loop to iterate through the array, excluding the last item
+  for (let i = 0; i < values.length - 1; i += 1) {
+    // an inner loop to compare neighbouring elements
+    for (let j = 0; j < values.length - 1 - i; j += 1) {
+      // record the comparison to the list of algorithm events
+      steps.push({
+        type: "compare",
+        indices: [j, j + 1],
+        values: [...values],
+      });
+
+      // swap if the left value is greater than the right value
+      if (values[j] > values[j + 1]) {
+        // using JS array destructuring assignment without a temp variable
+        [values[j], values[j + 1]] = [values[j + 1], values[j]];
+
+        // record the swap, including a copy of what the array now looks like
+        steps.push({
+          type: "swap",
+          indices: [j, j + 1],
+          values: [...values],
+        });
+      }
+    }
+  }
+
+  // record the completion of the algorithm
+  steps.push({
+    type: "complete",
+    values: [...values],
+  });
+
+  // return the result
+  return {
+    sortedArray: values,
+    steps,
+  };
+}
+</file>
+
+<file path="src/algorithms/sorting/insertionSort.js">
+export function insertionSort(array) {
+  const values = [...array];
+  const steps = [];
+
+  for (let i = 1; i < values.length; i += 1) {
+    const currentValue = values[i];
+    let j = i - 1;
+
+    steps.push({
+      type: "select",
+      index: i,
+    });
+
+    // use a while loop to keep shifting while the condition remains true
+    while (j >= 0 && values[j] > currentValue) {
+      steps.push({
+        type: "compare",
+        indices: [j, j + 1],
+        values: [...values],
+      });
+
+      values[j + 1] = values[j];
+
+      steps.push({
+        type: "shift",
+        indices: [j, j + 1],
+        values: [...values],
+      });
+
+      j -= 1;
+    }
+
+    values[j + 1] = currentValue;
+
+    steps.push({
+      type: "insert",
+      index: j + 1,
+      values: [...values],
+    });
+  }
+
+  steps.push({
+    type: "complete",
+    values: [...values],
+  });
+
+  return {
+    sortedArray: values,
+    steps,
+  };
+}
+</file>
+
+<file path="src/algorithms/sorting/selectionSort.js">
+// implementing the selection sort: Find the smallest remaining value and put it in the next position
+export function selectionSort(array) {
+  const values = [...array];
+  const steps = [];
+
+  for (let i = 0; i < values.length - 1; i += 1) {
+    // assume the first unsorted element is the smallest
+    let minimumIndex = i;
+
+    // search the remaining elements
+    for (let j = i + 1; j < values.length; j += 1) {
+      steps.push({
+        type: "compare",
+        indices: [minimumIndex, j],
+        values: [...values],
+      });
+
+      // if a smaller element is found, it becomes the new minimum index
+      if (values[j] < values[minimumIndex]) {
+        minimumIndex = j;
+
+        steps.push({
+          type: "minimum",
+          index: minimumIndex,
+          values: [...values],
+        });
+      }
+    }
+
+    if (minimumIndex !== i) {
+      [values[i], values[minimumIndex]] = [values[minimumIndex], values[i]];
+
+      steps.push({
+        type: "swap",
+        indices: [i, minimumIndex],
+        values: [...values],
+      });
+    }
+  }
+
+  steps.push({
+    type: "complete",
+    values: [...values],
+  });
+
+  return {
+    sortedArray: values,
+    steps,
+  };
+}
+</file>
+
+<file path="src/styles/layout.css">
+.app {
+  width: min(100% - 2rem, 1200px);
+  margin-inline: auto;
+}
+
+.visualizer {
+  padding-block: var(--spacing-xl);
+}
+
+.visualizer__header {
+  margin-bottom: var(--spacing-xl);
+}
+
+.visualizer__header h1 {
+  margin-top: 0;
+  margin-bottom: var(--spacing-sm);
+}
+
+.visualizer__header p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.visualizer__stage {
+  min-height: 400px;
+  padding: var(--spacing-lg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+</file>
+
+<file path="src/styles/responsive.css">
+@media (max-width: 768px) {
+  .app {
+    width: min(100% - 1rem, 1200px);
+  }
+}
+
+/* add reduced-motion support*/
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+</file>
+
+<file path="eslint.config.js">
+import eslint from "@eslint/js";
+import prettier from "eslint-config-prettier";
+import globals from "globals";
+
+export default [
+  eslint.configs.recommended,
+  prettier,
+  {
+    files: ["**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
+    },
+    rules: {
+      "no-console": "warn",
+    },
+  },
+  {
+    ignores: ["dist/", "node_modules/"],
+  },
+];
+</file>
+
+<file path="LICENSE">
+MIT License
+
+Copyright (c) 2026 officialanne
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+</file>
+
+<file path="package.json">
+{
+  "name": "algorithm_visualiser",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:algorithms": "node scripts/checkAlgorithms.js"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.8.1",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.11.0",
+    "prettier": "^3.9.6",
+    "vite": "^8.2.0"
+  }
+}
+</file>
+
+<file path="src/styles/components.css">
+button {
+  border: 0;
+}
+
+button:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.array-container {
+  min-height: 350px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: var(--spacing-lg);
+}
+
+.array-bar {
+  width: 40px;
+  min-height: 4px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--color-primary);
+  transition:
+    height var(--transition-normal),
+    transform var(--transition-fast);
+}
+
+.array-bar.is-comparing {
+  background: var(--color-warning);
+}
+
+.array-bar.is-swapping {
+  background: var(--color-danger);
+  transform: translateY(-8px);
+}
+
+.array-bar.is-sorted {
+  background: var(--color-success);
+}
+
+/* other styling */
+.toolbar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.toolbar__row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+button {
+  padding: 0.7rem 1.2rem;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+</file>
+
+<file path="src/main.js">
+import "./styles/main.css";
+
+import { createToolbar } from "./components/toolbar.js";
+import { getControls } from "./components/controls.js";
+import { createAppController } from "./controllers/appController.js";
+
+// finds div elements with the specified id and show the controls
+const toolbar = document.querySelector("#toolbar");
+toolbar.innerHTML = createToolbar();
+
+const controls = getControls();
+
+createAppController({
+  container: document.querySelector("#array-container"),
+  controls,
+});
+</file>
+
+<file path="index.html">
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <meta
+      name="description"
+      content="Interactive algorithm and data structure visualizer built with vanilla JavaScript."
+    />
+
+    <meta name="theme-color" content="#f8fafc" />
+
+    <title>Algorithm Visualizer</title>
+  </head>
+
+  <body>
+    <header>
+      <nav aria-label="Main navigation">
+        <a href="/" aria-label="Algorithm Visualizer home">
+          Algorithm Visualizer
+        </a>
+      </nav>
+    </header>
+
+    <main id="app" class="app">
+      <section class="visualizer">
+        <header class="visualizer__header">
+          <h1>Algorithm Visualizer</h1>
+
+          <p>Explore how classic algorithms work.</p>
+        </header>
+
+        <section id="toolbar" class="toolbar"></section>
+
+        <section class="visualizer__stage">
+          <div id="array-container" class="array-container"></div>
+        </section>
+      </section>
+    </main>
+
+    <footer>
+      <p>Algorithm Visualizer</p>
+    </footer>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
+</file>
+
+</files>
