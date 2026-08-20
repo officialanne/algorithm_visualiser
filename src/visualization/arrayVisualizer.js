@@ -1,34 +1,19 @@
-// turn the HTML into visual bars
 export function renderArray(container, values, state = {}) {
   container.innerHTML = "";
-
+  const max = Math.max(...values, 1);
   values.forEach((value, index) => {
-    // create a new HTML div element
     const bar = document.createElement("div");
-
-    // add the CSS class to each element
-    bar.classList.add("array-bar");
-
-    bar.style.height = `${value * 10}px`;
-
-    // produces HTML attributes to store small custom information to identify each bar
+    bar.className = "array-bar";
+    bar.style.height = `${Math.max(8, (value / max) * 100)}%`;
     bar.dataset.index = index;
-    bar.dataset.value = value;
-
-    if (state.comparing?.includes(index)) {
-      // add to a class representing the element being currently compared
-      bar.classList.add("is-comparing");
-    }
-
-    if (state.swapping?.includes(index)) {
-      bar.classList.add("is-swapping");
-    }
-
-    if (state.sorted?.includes(index)) {
-      bar.classList.add("is-sorted");
-    }
-
-    // puts the element into the document
-    container.appendChild(bar);
+    bar.setAttribute("aria-label", `Index ${index}, value ${value}`);
+    if (state.comparing?.includes(index)) bar.classList.add("is-comparing");
+    if (state.swapping?.includes(index)) bar.classList.add("is-swapping");
+    if (state.sorted?.includes(index)) bar.classList.add("is-sorted");
+    if (state.found?.includes(index)) bar.classList.add("is-found");
+    const label = document.createElement("span");
+    label.textContent = value;
+    bar.append(label);
+    container.append(bar);
   });
 }

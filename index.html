@@ -2,48 +2,111 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <meta
       name="description"
-      content="Interactive algorithm and data structure visualizer built with vanilla JavaScript."
+      content="An accessible, interactive visualizer for classic algorithms and data structures."
     />
-
-    <meta name="theme-color" content="#f8fafc" />
-
+    <meta name="theme-color" content="#2563eb" />
     <title>Algorithm Visualizer</title>
   </head>
-
   <body>
-    <header>
-      <nav aria-label="Main navigation">
-        <a href="/" aria-label="Algorithm Visualizer home">
-          Algorithm Visualizer
-        </a>
-      </nav>
+    <header class="site-header">
+      <a class="brand" href="#app">Algorithm Visualizer</a>
+      <button
+        id="theme-toggle"
+        class="icon-button"
+        type="button"
+        aria-pressed="false"
+      >
+        Dark mode
+      </button>
     </header>
-
     <main id="app" class="app">
-      <section class="visualizer">
-        <header class="visualizer__header">
-          <h1>Algorithm Visualizer</h1>
-
-          <p>Explore how classic algorithms work.</p>
-        </header>
-
-        <section id="toolbar" class="toolbar"></section>
-
-        <section class="visualizer__stage">
-          <div id="array-container" class="array-container"></div>
-        </section>
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Interactive computer science learning</p>
+        <h1 id="page-title">See every step of an algorithm.</h1>
+        <p>
+          Choose a sorting or searching algorithm, or practise stack and queue
+          operations.
+        </p>
+      </section>
+      <section class="control-panel surface" aria-label="Visualizer controls">
+        <div class="field">
+          <label for="algorithm-select">Algorithm or data structure</label
+          ><select id="algorithm-select"></select>
+        </div>
+        <div class="field array-only">
+          <label for="array-size"
+            >Array size <output id="array-size-value">20</output></label
+          ><input id="array-size" type="range" min="5" max="50" value="20" />
+        </div>
+        <div class="field array-only">
+          <label for="target-input">Search target</label
+          ><input id="target-input" type="number" value="25" min="1" max="99" />
+        </div>
+        <div class="field">
+          <label for="speed-slider"
+            >Speed <output id="speed-value">5</output></label
+          ><input id="speed-slider" type="range" min="1" max="10" value="5" />
+        </div>
+        <div class="actions">
+          <button id="generate-btn" type="button">Generate array</button
+          ><button id="start-btn" class="primary" type="button">Start</button
+          ><button id="pause-btn" type="button" disabled>Pause</button
+          ><button id="step-btn" type="button" disabled>Step</button
+          ><button id="reset-btn" type="button">Reset</button>
+        </div>
+        <form id="structure-form" class="structure-controls" hidden>
+          <label for="structure-input">Value</label
+          ><input
+            id="structure-input"
+            type="number"
+            value="10"
+            required
+          /><button type="submit" class="primary">Add</button
+          ><button id="remove-btn" type="button">Remove</button
+          ><button id="peek-btn" type="button">Peek/front</button
+          ><button id="clear-btn" type="button">Clear</button>
+        </form>
+      </section>
+      <section
+        class="visualizer-stage surface"
+        aria-labelledby="visualizer-title"
+      >
+        <h2 id="visualizer-title">Visualization</h2>
+        <div
+          id="array-container"
+          class="array-container"
+          aria-label="Algorithm visualization"
+        ></div>
+        <p id="empty-state" class="empty-state" hidden></p>
+      </section>
+      <section class="details-grid">
+        <article class="surface info-panel">
+          <h2 id="info-title">Bubble Sort</h2>
+          <p id="description"></p>
+          <h3>Pseudocode</h3>
+          <pre id="pseudocode"></pre>
+        </article>
+        <article class="surface complexity-panel">
+          <h2>Complexity</h2>
+          <dl id="complexity"></dl>
+        </article>
+      </section>
+      <section
+        class="surface status-panel"
+        aria-label="Current algorithm status"
+      >
+        <strong>Status</strong>
+        <p id="status-message" role="status" aria-live="polite">
+          Ready. Generate an array, then press Start.
+        </p>
       </section>
     </main>
-
     <footer>
-      <p>Algorithm Visualizer</p>
+      Built with Vanilla JavaScript, Vite, Vitest, and Playwright.
     </footer>
-
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

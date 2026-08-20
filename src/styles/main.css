@@ -6,33 +6,32 @@
 * {
   box-sizing: border-box;
 }
-
 html {
-  scroll-behavior: smooth;
+  color-scheme: light;
 }
-
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  font-family: var(--font-family);
-  background: var(--color-background);
-  color: var(--color-text);
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--text);
+  background: var(--background);
 }
-
 button,
 input,
-select,
-textarea {
+select {
   font: inherit;
 }
-
 button {
   cursor: pointer;
 }
-
-img,
-svg {
-  display: block;
-  max-width: 100%;
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
 }

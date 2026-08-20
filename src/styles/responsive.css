@@ -1,17 +1,27 @@
-@media (max-width: 768px) {
-  .app {
-    width: min(100% - 1rem, 1200px);
+@media (max-width: 760px) {
+  .control-panel {
+    grid-template-columns: 1fr;
+  }
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+  .visualizer-stage {
+    min-height: 300px;
+  }
+  .array-container {
+    min-height: 230px;
+    gap: 0.2rem;
+  }
+  .array-bar span {
+    display: none;
   }
 }
-
-/* add reduced-motion support*/
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

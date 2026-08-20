@@ -1,30 +1,125 @@
+.site-header,
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: min(1120px, calc(100% - 2rem));
+  margin: auto;
+  padding: 1rem 0;
+  color: var(--muted);
+}
+.brand {
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: none;
+}
 .app {
-  width: min(100% - 2rem, 1200px);
-  margin-inline: auto;
+  width: min(1120px, calc(100% - 2rem));
+  margin: 2rem auto 3rem;
 }
-
-.visualizer {
-  padding-block: var(--spacing-xl);
+.hero {
+  max-width: 700px;
+  margin-bottom: 2rem;
 }
-
-.visualizer__header {
-  margin-bottom: var(--spacing-xl);
+.eyebrow {
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
 }
-
-.visualizer__header h1 {
+h1 {
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  line-height: 1.02;
+  margin: 0.4rem 0 1rem;
+}
+h2 {
   margin-top: 0;
-  margin-bottom: var(--spacing-sm);
 }
-
-.visualizer__header p {
+.hero p {
+  color: var(--muted);
+  font-size: 1.12rem;
+  line-height: 1.6;
+}
+.surface {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.control-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: end;
+  padding: 1.25rem;
+}
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+.field label {
+  font-weight: 700;
+}
+.actions,
+.structure-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+.visualizer-stage {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  min-height: 420px;
+}
+.array-container {
+  height: 340px;
+  display: flex;
+  align-items: end;
+  gap: clamp(0.15rem, 1vw, 0.6rem);
+  justify-content: center;
+  padding-top: 1rem;
+}
+.details-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.info-panel,
+.complexity-panel,
+.status-panel {
+  padding: 1.5rem;
+}
+.status-panel {
+  margin-top: 1.5rem;
+}
+.status-panel p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+pre {
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: var(--background);
+  color: var(--text);
+  white-space: pre-wrap;
+}
+dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.8rem;
+}
+dt {
+  font-weight: 700;
+}
+dd {
   margin: 0;
-  color: var(--color-text-muted);
+  color: var(--muted);
 }
-
-.visualizer__stage {
-  min-height: 400px;
-  padding: var(--spacing-lg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
+footer {
+  justify-content: center;
+  font-size: 0.9rem;
 }

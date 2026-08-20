@@ -3,5 +3,4 @@ dist/
 playwright-report/
 test-results/
 .playwright-browsers/
-.env
-.DS_Store
+pnpm-lock.yaml

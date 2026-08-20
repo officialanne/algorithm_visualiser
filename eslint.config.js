@@ -10,16 +10,17 @@ export default [
     languageOptions: {
       ecmaVersion: "latest",
       sourceType: "module",
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
+      globals: { ...globals.browser, ...globals.node },
     },
-    rules: {
-      "no-console": "warn",
-    },
+    rules: { "no-console": "warn" },
   },
   {
-    ignores: ["dist/", "node_modules/"],
+    ignores: [
+      "dist/",
+      "node_modules/",
+      "playwright-report/",
+      "test-results/",
+      ".playwright-browsers/",
+    ],
   },
 ];
