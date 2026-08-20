@@ -1,36 +1,16 @@
 import "./styles/main.css";
 
-import { bubbleSort } from "./algorithms/sorting/bubbleSort.js";
-import { selectionSort } from "./algorithms/sorting/selectionSort.js";
-import { insertionSort } from "./algorithms/sorting/insertionSort.js";
-import { visualizeSorting } from "./visualization/sortingVisualizer.js";
+import { createToolbar } from "./components/toolbar.js";
+import { getControls } from "./components/controls.js";
+import { createAppController } from "./controllers/appController.js";
 
-// finds div elements with the specified id
-const arrayContainer = document.querySelector("#array-container");
+// finds div elements with the specified id and show the controls
+const toolbar = document.querySelector("#toolbar");
+toolbar.innerHTML = createToolbar();
 
-// create an example array
-const values = [5, 2, 8, 1, 4];
+const controls = getControls();
 
-// bybble sort test
-/*
-visualizeSorting(
-  arrayContainer,
-  values,
-  bubbleSort,
-  500,
-);
-*/
-
-// selection sort test
-
-visualizeSorting(arrayContainer, values, selectionSort, 500);
-
-// insertion sort test
-/*
-visualizeSorting(
-  arrayContainer,
-  values,
-  insertionSort,
-  500,
-);
-*/
+createAppController({
+  container: document.querySelector("#array-container"),
+  controls,
+});
