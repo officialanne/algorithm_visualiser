@@ -1,9 +1,8 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
 
 export default defineConfig({
-  plugins: [react()],
-  base: "/algorithm_visualiser/",
+  // A relative path fixes ALL GitHub Pages naming and case-sensitivity issues
+  base: "./",
   build: {
     outDir: "dist",
   },

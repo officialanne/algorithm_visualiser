@@ -40,6 +40,13 @@ The content is organized as follows:
 </file_summary>
 
 <directory_structure>
+.github/
+  workflows/
+    deploy.yml
+    test.yml
+docs/
+  algorithms.md
+  architecture.md
 scripts/
   checkAlgorithms.js
 src/
@@ -59,6 +66,8 @@ src/
     toolbar.js
   controllers/
     appController.js
+  data/
+    algorithmInfo.js
   state/
     appState.js
     settings.js
@@ -70,23 +79,107 @@ src/
     variables.css
   utils/
     generateRandomArray.js
+    sleep.js
   visualization/
+    animationController.js
     arrayVisualizer.js
     sortingVisualizer.js
+    structureVisualizer.js
   main.js
+tests/
+  e2e/
+    visualizer.spec.js
+  unit/
+    searching.test.js
+    sorting.test.js
+    structures.test.js
 .editorconfig
 .gitignore
+.prettierignore
 .prettierrc
 eslint.config.js
 index.html
 LICENSE
 package.json
+playwright.config.js
 README
+README.md
 vite.config.js
+vitest.config.js
 </directory_structure>
 
 <files>
 This section contains the contents of the repository's files.
+
+<file path=".github/workflows/deploy.yml">
+name: Deploy to GitHub Pages
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: true
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: "${{ steps.deployment.outputs.page_url }}"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run build
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: dist }
+      - id: deployment
+        uses: actions/deploy-pages@v4
+</file>
+
+<file path=".github/workflows/test.yml">
+name: Test
+on: [push, pull_request]
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22, cache: npm }
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run test
+      - run: npm run build
+</file>
+
+<file path="docs/algorithms.md">
+# Algorithms and data structures
+
+- Bubble, selection, and insertion sort return visual steps while sorting a copy of the input.
+- Linear search visits elements in order.
+- Binary search works on a sorted copy, showing the low, middle, and high positions.
+- Stack uses LIFO operations: push, pop, and peek.
+- Queue uses FIFO operations: enqueue, dequeue, and front.
+
+The visualizer is designed for learning rather than benchmarking: all animations deliberately pause between recorded operations.
+</file>
+
+<file path="docs/architecture.md">
+# Architecture
+
+The application separates algorithm logic from the browser interface.
+
+`algorithms` return a result and an ordered list of descriptive steps. The controller sends those steps through the animation controller, and the visualization layer translates each step into DOM classes. This keeps algorithms independently testable and makes the UI replaceable.
+
+`appController` owns event wiring and current UI state. `appState` holds user preferences and runtime values. Static explanation and complexity data lives in `data/algorithmInfo.js`.
+</file>
 
 <file path="scripts/checkAlgorithms.js">
 // checking that the algorithm modules work before building the visual interface
@@ -134,165 +227,6 @@ queue.enqueue(30);
 console.log("Queue:", queue.toArray());
 console.log("Queue dequeue:", queue.dequeue());
 console.log("Queue:", queue.toArray());
-</file>
-
-<file path="src/algorithms/dataStructures/queue.js">
-export class Queue {
-  constructor() {
-    this.items = [];
-  }
-
-  // add an item to the end of the queue
-  enqueue(value) {
-    this.items.push(value);
-  }
-
-  // remove an item from the front of the queue
-  dequeue() {
-    // using shift to move hte remaining array elements
-    return this.items.shift();
-  }
-
-  front() {
-    return this.items[0];
-  }
-
-  isEmpty() {
-    return this.items.length === 0;
-  }
-
-  size() {
-    return this.items.length;
-  }
-
-  clear() {
-    this.items = [];
-  }
-
-  toArray() {
-    return [...this.items];
-  }
-}
-</file>
-
-<file path="src/algorithms/dataStructures/stack.js">
-// creates a class (a blueprint for creating objects iwth data + behaviour) - modelling the Stack abstration
-export class Stack {
-  constructor() {
-    this.items = [];
-  }
-
-  // adds an item to the top of the stack
-  push(value) {
-    this.items.push(value);
-  }
-
-  // removes the last item from the stack
-  pop() {
-    return this.items.pop();
-  }
-
-  peek() {
-    return this.items[this.items.length - 1];
-  }
-
-  isEmpty() {
-    return this.items.length === 0;
-  }
-
-  size() {
-    return this.items.length;
-  }
-
-  clear() {
-    this.items = [];
-  }
-
-  toArray() {
-    return [...this.items];
-  }
-}
-</file>
-
-<file path="src/algorithms/searching/binarySearch.js">
-export function binarySearch(array, target) {
-  const steps = [];
-
-  let low = 0;
-  let high = array.length - 1;
-
-  while (low <= high) {
-    // calculates the middle index, which needs to be a whole number so is rounded down
-    const middle = Math.floor((low + high) / 2);
-
-    steps.push({
-      type: "check",
-      indices: [low, middle, high],
-    });
-
-    if (array[middle] === target) {
-      steps.push({
-        type: "found",
-        index: middle,
-      });
-
-      return {
-        index: middle,
-        steps,
-      };
-    }
-
-    if (array[middle] < target) {
-      low = middle + 1;
-    } else {
-      high = middle - 1;
-    }
-  }
-
-  steps.push({
-    type: "notFound",
-  });
-
-  return {
-    index: -1,
-    steps,
-  };
-}
-</file>
-
-<file path="src/algorithms/searching/linearSearch.js">
-export function linearSearch(array, target) {
-  const steps = [];
-
-  for (let i = 0; i < array.length; i += 1) {
-    steps.push({
-      type: "check",
-      index: i,
-    });
-
-    if (array[i] === target) {
-      steps.push({
-        type: "found",
-        index: i,
-      });
-
-      return {
-        index: i,
-        steps,
-      };
-    }
-  }
-
-  steps.push({
-    type: "notFound",
-  });
-
-  // return -1 as an invalid index if the target is not found
-  return {
-    index: -1,
-    steps,
-  };
-}
 </file>
 
 <file path="src/components/controls.js">
@@ -378,121 +312,139 @@ export function createToolbar() {
 }
 </file>
 
-<file path="src/controllers/appController.js">
-import { generateRandomArray } from "../utils/generateRandomArray.js";
-
-import { renderArray } from "../visualization/arrayVisualizer.js";
-import { visualizeSorting } from "../visualization/sortingVisualizer.js";
-
-import { bubbleSort } from "../algorithms/sorting/bubbleSort.js";
-import { selectionSort } from "../algorithms/sorting/selectionSort.js";
-import { insertionSort } from "../algorithms/sorting/insertionSort.js";
-
-const algorithms = {
-  bubble: bubbleSort,
-  selection: selectionSort,
-  insertion: insertionSort,
+<file path="src/data/algorithmInfo.js">
+export const algorithmInfo = {
+  bubble: {
+    name: "Bubble Sort",
+    kind: "sorting",
+    description:
+      "Repeatedly compares adjacent values and swaps them when they are out of order.",
+    complexity: [
+      "Best",
+      "O(n)",
+      "Average",
+      "O(n²)",
+      "Worst",
+      "O(n²)",
+      "Space",
+      "O(1)",
+    ],
+    pseudocode:
+      "repeat for each pass\n  compare adjacent values\n  swap if left > right\nuntil no values are out of order",
+  },
+  selection: {
+    name: "Selection Sort",
+    kind: "sorting",
+    description:
+      "Selects the smallest value from the unsorted portion and moves it into place.",
+    complexity: [
+      "Best",
+      "O(n²)",
+      "Average",
+      "O(n²)",
+      "Worst",
+      "O(n²)",
+      "Space",
+      "O(1)",
+    ],
+    pseudocode:
+      "for each position\n  find minimum remaining value\n  swap it into this position",
+  },
+  insertion: {
+    name: "Insertion Sort",
+    kind: "sorting",
+    description:
+      "Builds a sorted section one value at a time by inserting each new value in the correct place.",
+    complexity: [
+      "Best",
+      "O(n)",
+      "Average",
+      "O(n²)",
+      "Worst",
+      "O(n²)",
+      "Space",
+      "O(1)",
+    ],
+    pseudocode:
+      "for each unsorted value\n  shift larger values right\n  insert the value in its gap",
+  },
+  linear: {
+    name: "Linear Search",
+    kind: "searching",
+    description:
+      "Checks each value from left to right until it finds the target or reaches the end.",
+    complexity: [
+      "Best",
+      "O(1)",
+      "Average",
+      "O(n)",
+      "Worst",
+      "O(n)",
+      "Space",
+      "O(1)",
+    ],
+    pseudocode:
+      "for each value\n  if value equals target\n    return its index\nreturn not found",
+  },
+  binary: {
+    name: "Binary Search",
+    kind: "searching",
+    description:
+      "On a sorted array, repeatedly discards half of the remaining search range.",
+    complexity: [
+      "Best",
+      "O(1)",
+      "Average",
+      "O(log n)",
+      "Worst",
+      "O(log n)",
+      "Space",
+      "O(1)",
+    ],
+    pseudocode:
+      "while low <= high\n  inspect middle value\n  keep only the half that can contain target",
+  },
+  stack: {
+    name: "Stack",
+    kind: "structure",
+    description:
+      "A last-in, first-out (LIFO) structure. Values are added and removed from the top.",
+    complexity: [
+      "Push",
+      "O(1)",
+      "Pop",
+      "O(1)",
+      "Peek",
+      "O(1)",
+      "Space",
+      "O(n)",
+    ],
+    pseudocode: "push: add to top\npop: remove top\npeek: inspect top",
+  },
+  queue: {
+    name: "Queue",
+    kind: "structure",
+    description:
+      "A first-in, first-out (FIFO) structure. Values join the rear and leave from the front.",
+    complexity: [
+      "Enqueue",
+      "O(1)",
+      "Dequeue",
+      "O(1)",
+      "Front",
+      "O(1)",
+      "Space",
+      "O(n)",
+    ],
+    pseudocode:
+      "enqueue: add to rear\ndequeue: remove front\nfront: inspect first value",
+  },
 };
 
-export function createAppController({ container, controls }) {
-  const state = {
-    values: generateRandomArray(),
-    algorithm: "bubble",
-    speed: 5,
-    running: false,
-  };
-
-  function render() {
-    renderArray(container, state.values);
-  }
-
-  function generate() {
-    if (state.running) {
-      return;
-    }
-
-    state.values = generateRandomArray();
-
-    render();
-  }
-
-  function changeAlgorithm(event) {
-    if (state.running) {
-      return;
-    }
-
-    state.algorithm = event.target.value;
-  }
-
-  function changeSpeed(event) {
-    state.speed = Number(event.target.value);
-    controls.speedValue.textContent = state.speed;
-  }
-
-  async function start() {
-    if (state.running) {
-      return;
-    }
-
-    state.running = true;
-
-    setControlsDisabled(true);
-
-    const algorithm = algorithms[state.algorithm];
-
-    const delay = speedToDelay(state.speed);
-
-    await visualizeSorting(container, state.values, algorithm, delay);
-
-    state.running = false;
-
-    setControlsDisabled(false);
-  }
-
-  function reset() {
-    if (state.running) {
-      return;
-    }
-
-    render();
-  }
-
-  function setControlsDisabled(disabled) {
-    controls.generateButton.disabled = disabled;
-    controls.startButton.disabled = disabled;
-    controls.resetButton.disabled = disabled;
-    controls.algorithmSelect.disabled = disabled;
-    controls.speedSlider.disabled = disabled;
-  }
-
-  controls.generateButton.addEventListener("click", generate);
-
-  controls.startButton.addEventListener("click", start);
-
-  controls.resetButton.addEventListener("click", reset);
-
-  controls.algorithmSelect.addEventListener("change", changeAlgorithm);
-
-  controls.speedSlider.addEventListener("input", changeSpeed);
-
-  render();
-
-  return {
-    state,
-  };
-}
-
-function speedToDelay(speed) {
-  return 1050 - speed * 100;
-}
-</file>
-
-<file path="src/state/appState.js">
-export const appState = {
-  values: [],
-  running: false,
-  paused: false,
-};
+export const options = Object.entries(algorithmInfo).map(([value, info]) => ({
+  value,
+  label: info.name,
+}));
 </file>
 
 <file path="src/state/settings.js">
@@ -502,123 +454,56 @@ export const settings = {
 };
 </file>
 
-<file path="src/styles/main.css">
-@import "./variables.css";
-@import "./layout.css";
-@import "./components.css";
-@import "./responsive.css";
-
-* {
-  box-sizing: border-box;
-}
-
-html {
-  scroll-behavior: smooth;
-}
-
-body {
-  margin: 0;
-  min-width: 320px;
-  min-height: 100vh;
-  font-family: var(--font-family);
-  background: var(--color-background);
-  color: var(--color-text);
-}
-
-button,
-input,
-select,
-textarea {
-  font: inherit;
-}
-
-button {
-  cursor: pointer;
-}
-
-img,
-svg {
-  display: block;
-  max-width: 100%;
-}
+<file path="src/utils/sleep.js">
+export const sleep = (milliseconds) =>
+  new Promise((resolve) => setTimeout(resolve, milliseconds));
 </file>
 
-<file path="src/styles/variables.css">
-:root {
-  --color-background: #f8fafc;
-  --color-surface: #ffffff;
-  --color-text: #0f172a;
-  --color-text-muted: #64748b;
-  --color-border: #e2e8f0;
+<file path="src/visualization/animationController.js">
+import { sleep } from "../utils/sleep.js";
 
-  --color-primary: #2563eb;
-  --color-success: #16a34a;
-  --color-warning: #f59e0b;
-  --color-danger: #dc2626;
-
-  --radius-sm: 0.375rem;
-  --radius-md: 0.5rem;
-  --radius-lg: 0.75rem;
-
-  --spacing-xs: 0.25rem;
-  --spacing-sm: 0.5rem;
-  --spacing-md: 1rem;
-  --spacing-lg: 1.5rem;
-  --spacing-xl: 2rem;
-
-  --font-family:
-    Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-
-  --transition-fast: 150ms ease;
-  --transition-normal: 250ms ease;
-}
-</file>
-
-<file path="src/utils/generateRandomArray.js">
-// generate arrays automatically
-export function generateRandomArray(size = 20, min = 5, max = 50) {
-  // generate an array of a specified length
-  return Array.from(
-    { length: size },
-    () => Math.floor(Math.random() * (max - min + 1)) + min,
-  );
-}
-</file>
-
-<file path="src/visualization/arrayVisualizer.js">
-// turn the HTML into visual bars
-export function renderArray(container, values, state = {}) {
-  container.innerHTML = "";
-
-  values.forEach((value, index) => {
-    // create a new HTML div element
-    const bar = document.createElement("div");
-
-    // add the CSS class to each element
-    bar.classList.add("array-bar");
-
-    bar.style.height = `${value * 10}px`;
-
-    // produces HTML attributes to store small custom information to identify each bar
-    bar.dataset.index = index;
-    bar.dataset.value = value;
-
-    if (state.comparing?.includes(index)) {
-      // add to a class representing the element being currently compared
-      bar.classList.add("is-comparing");
-    }
-
-    if (state.swapping?.includes(index)) {
-      bar.classList.add("is-swapping");
-    }
-
-    if (state.sorted?.includes(index)) {
-      bar.classList.add("is-sorted");
-    }
-
-    // puts the element into the document
-    container.appendChild(bar);
-  });
+export function createAnimationController() {
+  let paused = false;
+  let stepRequested = false;
+  let cancelled = false;
+  let resume;
+  const waitForResume = () =>
+    new Promise((resolve) => {
+      resume = resolve;
+    });
+  return {
+    async beforeStep(delay) {
+      while (paused && !cancelled) {
+        await waitForResume();
+        if (stepRequested) {
+          stepRequested = false;
+          paused = true;
+          break;
+        }
+      }
+      if (!cancelled) await sleep(delay);
+      return !cancelled;
+    },
+    pause() {
+      paused = true;
+    },
+    play() {
+      paused = false;
+      resume?.();
+    },
+    step() {
+      stepRequested = true;
+      resume?.();
+    },
+    reset() {
+      cancelled = true;
+      paused = false;
+      resume?.();
+    },
+    get paused() {
+      return paused;
+    },
+  };
 }
 </file>
 
@@ -697,53 +582,115 @@ function wait(milliseconds) {
 }
 </file>
 
-<file path=".editorconfig">
-root = true
-
-[*]
-charset = utf-8
-end_of_line = lf
-indent_style = space
-indent_size = 2
-insert_final_newline = true
-trim_trailing_whitespace = true
+<file path="src/visualization/structureVisualizer.js">
+export function renderStructure(container, values, type) {
+  container.innerHTML = "";
+  if (!values.length) {
+    container.textContent = "The structure is empty.";
+    return;
+  }
+  const ordered = type === "stack" ? [...values].reverse() : values;
+  ordered.forEach((value, index) => {
+    const node = document.createElement("div");
+    node.className = "structure-node";
+    node.textContent = value;
+    if (index === 0) node.dataset.label = type === "stack" ? "Top" : "Front";
+    if (type === "queue" && index === ordered.length - 1)
+      node.dataset.rear = "Rear";
+    container.append(node);
+  });
+}
 </file>
 
-<file path=".gitignore">
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+<file path="tests/e2e/visualizer.spec.js">
+import { expect, test } from "@playwright/test";
 
-node_modules
-dist
-dist-ssr
-*.local
+test("lets a visitor generate and start a sorting visualization", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await expect(
+    page.getByRole("heading", { name: "See every step of an algorithm." }),
+  ).toBeVisible();
+  const firstBar = page.locator(".array-bar").first();
+  await expect(firstBar).toBeVisible();
+  await expect(firstBar).toHaveCSS("height", /px/);
+  await page.getByRole("button", { name: "Generate array" }).click();
+  await page.getByRole("button", { name: "Start" }).click();
+  await expect(page.getByText(/Comparing|Swapping|Complete/)).toBeVisible();
+});
+</file>
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+<file path="tests/unit/searching.test.js">
+import { describe, expect, it } from "vitest";
+import { binarySearch } from "../../src/algorithms/searching/binarySearch.js";
+import { linearSearch } from "../../src/algorithms/searching/linearSearch.js";
 
-# Other
+describe("searching algorithms", () => {
+  it("finds and reports missing values with linear search", () => {
+    expect(linearSearch([3, 9, 1], 9).index).toBe(1);
+    expect(linearSearch([3, 9, 1], 2).index).toBe(-1);
+  });
+  it("sorts a copy and finds values with binary search", () => {
+    const input = [9, 1, 5];
+    expect(binarySearch(input, 5).index).toBe(1);
+    expect(input).toEqual([9, 1, 5]);
+  });
+});
+</file>
+
+<file path="tests/unit/sorting.test.js">
+import { describe, expect, it } from "vitest";
+import { bubbleSort } from "../../src/algorithms/sorting/bubbleSort.js";
+import { insertionSort } from "../../src/algorithms/sorting/insertionSort.js";
+import { selectionSort } from "../../src/algorithms/sorting/selectionSort.js";
+
+describe.each([bubbleSort, insertionSort, selectionSort])(
+  "sorting algorithms",
+  (sort) => {
+    it("sorts duplicates and negative values without mutating the input", () => {
+      const input = [4, -1, 4, 0, 2];
+      expect(sort(input).sortedArray).toEqual([-1, 0, 2, 4, 4]);
+      expect(input).toEqual([4, -1, 4, 0, 2]);
+    });
+    it("handles empty and single-value arrays", () => {
+      expect(sort([]).sortedArray).toEqual([]);
+      expect(sort([7]).sortedArray).toEqual([7]);
+    });
+  },
+);
+</file>
+
+<file path="tests/unit/structures.test.js">
+import { expect, it } from "vitest";
+import { Queue } from "../../src/algorithms/dataStructures/queue.js";
+import { Stack } from "../../src/algorithms/dataStructures/stack.js";
+
+it("implements LIFO stack operations", () => {
+  const stack = new Stack();
+  stack.push(1);
+  stack.push(2);
+  expect(stack.peek()).toBe(2);
+  expect(stack.pop()).toBe(2);
+  expect(stack.toArray()).toEqual([1]);
+});
+it("implements FIFO queue operations", () => {
+  const queue = new Queue();
+  queue.enqueue(1);
+  queue.enqueue(2);
+  expect(queue.front()).toBe(1);
+  expect(queue.dequeue()).toBe(1);
+  expect(queue.toArray()).toEqual([2]);
+});
+</file>
+
+<file path=".prettierignore">
 node_modules/
 dist/
-.DS_Store
-.env
-.env.*
-!.env.example
-.vscode/
-.idea/
+playwright-report/
+test-results/
+.playwright-browsers/
+pnpm-lock.yaml
 </file>
 
 <file path=".prettierrc">
@@ -753,6 +700,20 @@ dist/
   "trailingComma": "all",
   "printWidth": 80
 }
+</file>
+
+<file path="playwright.config.js">
+import { defineConfig } from "@playwright/test";
+
+export default defineConfig({
+  testDir: "./tests/e2e",
+  use: { baseURL: "http://127.0.0.1:5173" },
+  webServer: {
+    command: "node node_modules/vite/bin/vite.js --host 127.0.0.1",
+    url: "http://127.0.0.1:5173",
+    reuseExistingServer: true,
+  },
+});
 </file>
 
 <file path="README">
@@ -797,12 +758,717 @@ npm run dev
 ```
 </file>
 
-<file path="vite.config.js">
-import { defineConfig } from "vite";
+<file path="vitest.config.js">
+import { defineConfig } from "vitest/config";
 
 export default defineConfig({
-  base: "./",
+  test: {
+    exclude: ["tests/e2e/**", "node_modules/**", "dist/**"],
+  },
 });
+</file>
+
+<file path="src/controllers/appController.js">
+import { binarySearch } from "../algorithms/searching/binarySearch.js";
+import { linearSearch } from "../algorithms/searching/linearSearch.js";
+import { bubbleSort } from "../algorithms/sorting/bubbleSort.js";
+import { insertionSort } from "../algorithms/sorting/insertionSort.js";
+import { selectionSort } from "../algorithms/sorting/selectionSort.js";
+import { Queue } from "../algorithms/dataStructures/queue.js";
+import { Stack } from "../algorithms/dataStructures/stack.js";
+import { algorithmInfo } from "../data/algorithmInfo.js";
+import { createAnimationController } from "../visualization/animationController.js";
+import { renderArray } from "../visualization/arrayVisualizer.js";
+import { renderStructure } from "../visualization/structureVisualizer.js";
+
+const algorithms = {
+  bubble: bubbleSort,
+  selection: selectionSort,
+  insertion: insertionSort,
+  linear: linearSearch,
+  binary: binarySearch,
+};
+const descriptionFor = (step) =>
+  ({
+    compare: `Comparing indices ${step.indices.join(" and ")}.`,
+    swap: `Swapping indices ${step.indices.join(" and ")}.`,
+    sorted: `Index ${step.indices[0]} is in its final position.`,
+    minimum: `A new minimum was found at index ${step.indices[0]}.`,
+    select: `Selecting value at index ${step.indices[0]}.`,
+    shift: `Shifting values at indices ${step.indices.join(" and ")}.`,
+    insert: `Inserting at index ${step.indices[0]}.`,
+    check: `Checking index${step.indices.length > 1 ? "es" : ""} ${step.indices.join(", ")}.`,
+    found: `Target found at index ${step.indices[0]}.`,
+    notFound: "Target is not in this array.",
+    complete: "Complete. The algorithm has finished.",
+  })[step.type] || "Processing step.";
+
+export function createAppController({ elements, state }) {
+  let animation = null;
+  let structure = null;
+  const info = () => algorithmInfo[state.algorithm];
+  const isStructure = () => info().kind === "structure";
+  const delay = () => 1100 - state.speed * 100;
+  function status(message) {
+    elements.status.textContent = message;
+  }
+  function render(values = state.values, visualState = {}) {
+    renderArray(elements.container, values, visualState);
+  }
+  function setButtons(running) {
+    elements.generate.disabled = running;
+    elements.start.disabled = running;
+    elements.algorithm.disabled = running;
+    elements.size.disabled = running;
+    elements.target.disabled = running;
+    elements.pause.disabled = !running;
+    elements.step.disabled = !running;
+  }
+  function updateMode() {
+    const structureMode = isStructure();
+    elements.arrayOnly.forEach((element) => {
+      element.hidden = structureMode;
+    });
+    elements.actions.hidden = structureMode;
+    elements.structureForm.hidden = !structureMode;
+    elements.stageTitle.textContent = structureMode
+      ? `${info().name} simulator`
+      : "Visualization";
+    if (structureMode) {
+      structure = state.algorithm === "stack" ? new Stack() : new Queue();
+      renderStructure(elements.container, [], state.algorithm);
+      status(`Ready to use the ${info().name.toLowerCase()}.`);
+    } else render();
+  }
+  function updateInfo() {
+    const current = info();
+    elements.infoTitle.textContent = current.name;
+    elements.description.textContent = current.description;
+    elements.pseudocode.textContent = current.pseudocode;
+    elements.complexity.innerHTML = current.complexity
+      .map((item, index) =>
+        index % 2 === 0 ? `<dt>${item}</dt>` : `<dd>${item}</dd>`,
+      )
+      .join("");
+  }
+  function changeAlgorithm() {
+    if (state.running) return;
+    state.algorithm = elements.algorithm.value;
+    updateInfo();
+    updateMode();
+  }
+  function generate() {
+    if (state.running) return;
+    state.values = elements.makeArray(Number(elements.size.value));
+    state.originalValues = [...state.values];
+    render();
+    status("New array generated. Press Start to visualize it.");
+  }
+  async function start() {
+    if (state.running || isStructure()) return;
+    state.running = true;
+    animation = createAnimationController();
+    setButtons(true);
+    let result;
+    const values =
+      state.algorithm === "binary"
+        ? [...state.values].sort((a, b) => a - b)
+        : state.values;
+    if (state.algorithm === "binary") {
+      state.values = values;
+      render(values);
+    }
+    result = ["linear", "binary"].includes(state.algorithm)
+      ? algorithms[state.algorithm](values, Number(elements.target.value))
+      : algorithms[state.algorithm](values);
+    for (const step of result.steps) {
+      if (!(await animation.beforeStep(delay()))) break;
+      const visualState = {
+        comparing: ["compare", "check", "minimum", "select", "insert"].includes(
+          step.type,
+        )
+          ? step.indices
+          : [],
+        swapping: ["swap", "shift"].includes(step.type) ? step.indices : [],
+        found: step.type === "found" ? step.indices : [],
+        sorted:
+          step.type === "complete"
+            ? step.values.map((_, index) => index)
+            : step.type === "sorted"
+              ? step.indices
+              : [],
+      };
+      render(step.values, visualState);
+      status(descriptionFor(step));
+    }
+    state.values = result.sortedArray || result.values || state.values;
+    state.running = false;
+    animation = null;
+    setButtons(false);
+  }
+  function pause() {
+    if (!animation) return;
+    if (animation.paused) {
+      animation.play();
+      elements.pause.textContent = "Pause";
+      status("Animation resumed.");
+    } else {
+      animation.pause();
+      elements.pause.textContent = "Resume";
+      status("Animation paused. Use Step to advance one operation.");
+    }
+  }
+  function step() {
+    animation?.step();
+    status("Advancing one operation.");
+  }
+  function reset() {
+    animation?.reset();
+    animation = null;
+    state.running = false;
+    elements.pause.textContent = "Pause";
+    setButtons(false);
+    if (!isStructure()) {
+      state.values = [...state.originalValues];
+      render();
+      status("Reset to the original array.");
+    }
+  }
+  function structureAction(action) {
+    const value = Number(elements.structureInput.value);
+    if (action === "add") {
+      if (!Number.isFinite(value)) return;
+      state.algorithm === "stack"
+        ? structure.push(value)
+        : structure.enqueue(value);
+      status(
+        `${value} added to the ${state.algorithm === "stack" ? "top" : "rear"}.`,
+      );
+    }
+    if (action === "remove") {
+      const removed =
+        state.algorithm === "stack" ? structure.pop() : structure.dequeue();
+      status(
+        removed === undefined
+          ? "The structure is empty."
+          : `${removed} removed.`,
+      );
+    }
+    if (action === "peek") {
+      const valueAtEdge =
+        state.algorithm === "stack" ? structure.peek() : structure.front();
+      status(
+        valueAtEdge === undefined
+          ? "The structure is empty."
+          : `Current ${state.algorithm === "stack" ? "top" : "front"}: ${valueAtEdge}.`,
+      );
+    }
+    if (action === "clear") {
+      structure.clear();
+      status("The structure was cleared.");
+    }
+    renderStructure(elements.container, structure.toArray(), state.algorithm);
+  }
+  elements.generate.addEventListener("click", generate);
+  elements.start.addEventListener("click", start);
+  elements.pause.addEventListener("click", pause);
+  elements.step.addEventListener("click", step);
+  elements.reset.addEventListener("click", reset);
+  elements.algorithm.addEventListener("change", changeAlgorithm);
+  elements.size.addEventListener("input", () => {
+    elements.sizeValue.textContent = elements.size.value;
+  });
+  elements.speed.addEventListener("input", () => {
+    state.speed = Number(elements.speed.value);
+    elements.speedValue.textContent = state.speed;
+  });
+  elements.structureForm.addEventListener("submit", (event) => {
+    event.preventDefault();
+    structureAction("add");
+  });
+  elements.remove.addEventListener("click", () => structureAction("remove"));
+  elements.peek.addEventListener("click", () => structureAction("peek"));
+  elements.clear.addEventListener("click", () => structureAction("clear"));
+  updateInfo();
+  updateMode();
+  return { generate };
+}
+</file>
+
+<file path="src/state/appState.js">
+export function createAppState(values) {
+  return {
+    values,
+    originalValues: [...values],
+    algorithm: "bubble",
+    speed: 5,
+    running: false,
+    paused: false,
+    theme: localStorage.getItem("algorithm-visualizer-theme") || "light",
+  };
+}
+</file>
+
+<file path="src/styles/main.css">
+@import "./variables.css";
+@import "./layout.css";
+@import "./components.css";
+@import "./responsive.css";
+
+* {
+  box-sizing: border-box;
+}
+html {
+  color-scheme: light;
+}
+html[data-theme="dark"] {
+  color-scheme: dark;
+}
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--text);
+  background: var(--background);
+}
+button,
+input,
+select {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+</file>
+
+<file path="src/styles/variables.css">
+:root {
+  --background: #f1f5f9;
+  --surface: #fff;
+  --text: #172033;
+  --muted: #526076;
+  --border: #cbd5e1;
+  --primary: #1d4ed8;
+  --primary-hover: #1e40af;
+  --warning: #d97706;
+  --danger: #dc2626;
+  --success: #15803d;
+  --found: #7e22ce;
+  --focus: #f97316;
+  --shadow: 0 10px 30px rgb(15 23 42 / 0.08);
+}
+:root[data-theme="dark"] {
+  --background: #0f172a;
+  --surface: #172033;
+  --text: #f8fafc;
+  --muted: #cbd5e1;
+  --border: #475569;
+  --primary: #60a5fa;
+  --primary-hover: #93c5fd;
+  --warning: #fbbf24;
+  --danger: #fb7185;
+  --success: #4ade80;
+  --found: #c084fc;
+  --focus: #fbbf24;
+  --shadow: 0 10px 30px rgb(0 0 0 / 0.25);
+}
+</file>
+
+<file path="src/utils/generateRandomArray.js">
+export function generateRandomArray(size = 20, min = 5, max = 50) {
+  return Array.from(
+    { length: size },
+    () => Math.floor(Math.random() * (max - min + 1)) + min,
+  );
+}
+</file>
+
+<file path="src/visualization/arrayVisualizer.js">
+export function renderArray(container, values, state = {}) {
+  container.innerHTML = "";
+  const max = Math.max(...values, 1);
+  values.forEach((value, index) => {
+    const bar = document.createElement("div");
+    bar.className = "array-bar";
+    bar.style.height = `${Math.max(8, (value / max) * 100)}%`;
+    bar.dataset.index = index;
+    bar.setAttribute("aria-label", `Index ${index}, value ${value}`);
+    if (state.comparing?.includes(index)) bar.classList.add("is-comparing");
+    if (state.swapping?.includes(index)) bar.classList.add("is-swapping");
+    if (state.sorted?.includes(index)) bar.classList.add("is-sorted");
+    if (state.found?.includes(index)) bar.classList.add("is-found");
+    const label = document.createElement("span");
+    label.textContent = value;
+    bar.append(label);
+    container.append(bar);
+  });
+}
+</file>
+
+<file path=".editorconfig">
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+</file>
+
+<file path=".gitignore">
+node_modules/
+dist/
+playwright-report/
+test-results/
+.playwright-browsers/
+.env
+.DS_Store
+</file>
+
+<file path="src/algorithms/dataStructures/queue.js">
+export class Queue {
+  constructor() {
+    this.items = [];
+  }
+
+  // add an item to the end of the queue
+  enqueue(value) {
+    this.items.push(value);
+  }
+
+  // remove an item from the front of the queue
+  dequeue() {
+    // using shift to move hte remaining array elements
+    return this.items.shift();
+  }
+
+  front() {
+    return this.items[0];
+  }
+
+  isEmpty() {
+    return this.items.length === 0;
+  }
+
+  size() {
+    return this.items.length;
+  }
+
+  clear() {
+    this.items = [];
+  }
+
+  toArray() {
+    return [...this.items];
+  }
+}
+</file>
+
+<file path="src/algorithms/dataStructures/stack.js">
+// creates a class (a blueprint for creating objects iwth data + behaviour) - modelling the Stack abstration
+export class Stack {
+  constructor() {
+    this.items = [];
+  }
+
+  // adds an item to the top of the stack
+  push(value) {
+    this.items.push(value);
+  }
+
+  // removes the last item from the stack
+  pop() {
+    return this.items.pop();
+  }
+
+  peek() {
+    return this.items[this.items.length - 1];
+  }
+
+  isEmpty() {
+    return this.items.length === 0;
+  }
+
+  size() {
+    return this.items.length;
+  }
+
+  clear() {
+    this.items = [];
+  }
+
+  toArray() {
+    return [...this.items];
+  }
+}
+</file>
+
+<file path="src/algorithms/searching/binarySearch.js">
+export function binarySearch(array, target) {
+  const values = [...array].sort((a, b) => a - b);
+  const steps = [];
+  let low = 0;
+  let high = values.length - 1;
+  while (low <= high) {
+    const middle = Math.floor((low + high) / 2);
+    steps.push({
+      type: "check",
+      indices: [low, middle, high],
+      values: [...values],
+      low,
+      middle,
+      high,
+    });
+    if (values[middle] === target) {
+      steps.push({ type: "found", indices: [middle], values: [...values] });
+      return { index: middle, values, steps };
+    }
+    if (values[middle] < target) low = middle + 1;
+    else high = middle - 1;
+  }
+  steps.push({ type: "notFound", values });
+  return { index: -1, values, steps };
+}
+</file>
+
+<file path="src/algorithms/searching/linearSearch.js">
+export function linearSearch(array, target) {
+  const steps = [];
+
+  for (let i = 0; i < array.length; i += 1) {
+    steps.push({
+      type: "check",
+      index: i,
+    });
+
+    if (array[i] === target) {
+      steps.push({
+        type: "found",
+        index: i,
+      });
+
+      return {
+        index: i,
+        steps,
+      };
+    }
+  }
+
+  steps.push({
+    type: "notFound",
+  });
+
+  // return -1 as an invalid index if the target is not found
+  return {
+    index: -1,
+    steps,
+  };
+}
+</file>
+
+<file path="src/styles/layout.css">
+.site-header,
+footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: min(1120px, calc(100% - 2rem));
+  margin: auto;
+  padding: 1rem 0;
+  color: var(--muted);
+}
+.brand {
+  color: var(--text);
+  font-weight: 800;
+  text-decoration: none;
+}
+.app {
+  width: min(1120px, calc(100% - 2rem));
+  margin: 2rem auto 3rem;
+}
+.hero {
+  max-width: 700px;
+  margin-bottom: 2rem;
+}
+.eyebrow {
+  color: var(--primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+h1 {
+  font-size: clamp(2.2rem, 5vw, 4.2rem);
+  line-height: 1.02;
+  margin: 0.4rem 0 1rem;
+}
+h2 {
+  margin-top: 0;
+}
+.hero p {
+  color: var(--muted);
+  font-size: 1.12rem;
+  line-height: 1.6;
+}
+.surface {
+  border: 1px solid var(--border);
+  border-radius: 1rem;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.control-panel {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: end;
+  padding: 1.25rem;
+}
+.field {
+  display: grid;
+  gap: 0.4rem;
+}
+.field label {
+  font-weight: 700;
+}
+.actions,
+.structure-controls {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 0.65rem;
+  flex-wrap: wrap;
+}
+.visualizer-stage {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+  min-height: 420px;
+}
+.array-container {
+  height: 340px;
+  display: flex;
+  align-items: end;
+  gap: clamp(0.15rem, 1vw, 0.6rem);
+  justify-content: center;
+  padding-top: 1rem;
+}
+.details-grid {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr;
+  gap: 1.5rem;
+  margin-top: 1.5rem;
+}
+.info-panel,
+.complexity-panel,
+.status-panel {
+  padding: 1.5rem;
+}
+.status-panel {
+  margin-top: 1.5rem;
+}
+.status-panel p {
+  margin-bottom: 0;
+  color: var(--muted);
+}
+pre {
+  overflow: auto;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: var(--background);
+  color: var(--text);
+  white-space: pre-wrap;
+}
+dl {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.8rem;
+}
+dt {
+  font-weight: 700;
+}
+dd {
+  margin: 0;
+  color: var(--muted);
+}
+footer {
+  justify-content: center;
+  font-size: 0.9rem;
+}
+</file>
+
+<file path="src/styles/responsive.css">
+@media (max-width: 760px) {
+  .control-panel {
+    grid-template-columns: 1fr;
+  }
+  .details-grid {
+    grid-template-columns: 1fr;
+  }
+  .visualizer-stage {
+    min-height: 300px;
+  }
+  .array-container {
+    min-height: 230px;
+    gap: 0.2rem;
+  }
+  .array-bar span {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+</file>
+
+<file path="eslint.config.js">
+import eslint from "@eslint/js";
+import prettier from "eslint-config-prettier";
+import globals from "globals";
+
+export default [
+  eslint.configs.recommended,
+  prettier,
+  {
+    files: ["**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: { ...globals.browser, ...globals.node },
+    },
+    rules: { "no-console": "warn" },
+  },
+  {
+    ignores: [
+      "dist/",
+      "node_modules/",
+      "playwright-report/",
+      "test-results/",
+      ".playwright-browsers/",
+    ],
+  },
+];
+</file>
+
+<file path="LICENSE">
+MIT License
+
+Copyright (c) 2026 officialanne
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software.
 </file>
 
 <file path="src/algorithms/sorting/bubbleSort.js">
@@ -961,115 +1627,157 @@ export function selectionSort(array) {
 }
 </file>
 
-<file path="src/styles/layout.css">
-.app {
-  width: min(100% - 2rem, 1200px);
-  margin-inline: auto;
+<file path="src/styles/components.css">
+button,
+select,
+input {
+  min-height: 2.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  color: var(--text);
+  background: var(--surface);
 }
-
-.visualizer {
-  padding-block: var(--spacing-xl);
+button:hover:not(:disabled) {
+  border-color: var(--primary);
 }
-
-.visualizer__header {
-  margin-bottom: var(--spacing-xl);
+button.primary {
+  color: white;
+  background: var(--primary);
+  border-color: var(--primary);
 }
-
-.visualizer__header h1 {
-  margin-top: 0;
-  margin-bottom: var(--spacing-sm);
+button.primary:hover:not(:disabled) {
+  background: var(--primary-hover);
 }
-
-.visualizer__header p {
-  margin: 0;
-  color: var(--color-text-muted);
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
 }
-
-.visualizer__stage {
-  min-height: 400px;
-  padding: var(--spacing-lg);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-lg);
-  background: var(--color-surface);
+.icon-button {
+  min-height: auto;
+}
+.array-bar {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 10px;
+  max-width: 48px;
+  border-radius: 0.4rem 0.4rem 0 0;
+  background: var(--primary);
+  transition:
+    height 0.2s ease,
+    transform 0.2s ease,
+    background 0.2s ease;
+}
+.array-bar span {
+  position: absolute;
+  top: -1.45rem;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.array-bar.is-comparing {
+  background: var(--warning);
+}
+.array-bar.is-swapping {
+  background: var(--danger);
+  transform: translateY(-10px);
+}
+.array-bar.is-sorted {
+  background: var(--success);
+}
+.array-bar.is-found {
+  background: var(--found);
+}
+.structure-node {
+  position: relative;
+  min-width: 5rem;
+  padding: 1rem;
+  text-align: center;
+  border: 2px solid var(--primary);
+  border-radius: 0.5rem;
+  color: var(--text);
+  background: var(--surface);
+}
+.structure-node::before,
+.structure-node::after {
+  position: absolute;
+  top: -1.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+}
+.structure-node::before {
+  content: attr(data-label);
+  left: 0;
+}
+.structure-node::after {
+  content: attr(data-rear);
+  right: 0;
 }
 </file>
 
-<file path="src/styles/responsive.css">
-@media (max-width: 768px) {
-  .app {
-    width: min(100% - 1rem, 1200px);
-  }
+<file path="src/main.js">
+import "./styles/main.css";
+import { createAppController } from "./controllers/appController.js";
+import { options } from "./data/algorithmInfo.js";
+import { createAppState } from "./state/appState.js";
+import { generateRandomArray } from "./utils/generateRandomArray.js";
+
+const $ = (selector) => document.querySelector(selector);
+const select = $("#algorithm-select");
+select.innerHTML = options
+  .map(({ value, label }) => `<option value="${value}">${label}</option>`)
+  .join("");
+const state = createAppState(generateRandomArray());
+const elements = {
+  container: $("#array-container"),
+  algorithm: select,
+  generate: $("#generate-btn"),
+  start: $("#start-btn"),
+  pause: $("#pause-btn"),
+  step: $("#step-btn"),
+  reset: $("#reset-btn"),
+  size: $("#array-size"),
+  sizeValue: $("#array-size-value"),
+  target: $("#target-input"),
+  speed: $("#speed-slider"),
+  speedValue: $("#speed-value"),
+  status: $("#status-message"),
+  stageTitle: $("#visualizer-title"),
+  infoTitle: $("#info-title"),
+  description: $("#description"),
+  pseudocode: $("#pseudocode"),
+  complexity: $("#complexity"),
+  arrayOnly: document.querySelectorAll(".array-only"),
+  actions: $(".actions"),
+  structureForm: $("#structure-form"),
+  structureInput: $("#structure-input"),
+  remove: $("#remove-btn"),
+  peek: $("#peek-btn"),
+  clear: $("#clear-btn"),
+  makeArray: generateRandomArray,
+};
+const themeButton = $("#theme-toggle");
+function setTheme(theme) {
+  document.documentElement.dataset.theme = theme;
+  themeButton.setAttribute("aria-pressed", theme === "dark");
+  themeButton.textContent = theme === "dark" ? "Light mode" : "Dark mode";
+  localStorage.setItem("algorithm-visualizer-theme", theme);
 }
-
-/* add reduced-motion support*/
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    scroll-behavior: auto !important;
-    transition-duration: 0.01ms !important;
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-  }
-}
-</file>
-
-<file path="eslint.config.js">
-import eslint from "@eslint/js";
-import prettier from "eslint-config-prettier";
-import globals from "globals";
-
-export default [
-  eslint.configs.recommended,
-  prettier,
-  {
-    files: ["**/*.js"],
-    languageOptions: {
-      ecmaVersion: "latest",
-      sourceType: "module",
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-    rules: {
-      "no-console": "warn",
-    },
-  },
-  {
-    ignores: ["dist/", "node_modules/"],
-  },
-];
-</file>
-
-<file path="LICENSE">
-MIT License
-
-Copyright (c) 2026 officialanne
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+setTheme(state.theme);
+themeButton.addEventListener("click", () =>
+  setTheme(
+    document.documentElement.dataset.theme === "dark" ? "light" : "dark",
+  ),
+);
+createAppController({ elements, state });
 </file>
 
 <file path="package.json">
 {
-  "name": "algorithm_visualiser",
-  "version": "0.0.0",
+  "name": "algorithm-visualizer",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "scripts": {
@@ -1079,105 +1787,68 @@ SOFTWARE.
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "check:algorithms": "node scripts/checkAlgorithms.js"
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:e2e": "playwright test",
+    "check": "npm run lint && npm run test && npm run build"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.58.2",
+    "@vitejs/plugin-react": "^6.1.0",
     "eslint": "^10.8.1",
     "eslint-config-prettier": "^10.1.8",
     "globals": "^17.11.0",
     "prettier": "^3.9.6",
-    "vite": "^8.2.0"
+    "vite": "^8.2.0",
+    "vitest": "^4.0.18"
   }
 }
 </file>
 
-<file path="src/styles/components.css">
-button {
-  border: 0;
-}
+<file path="README.md">
+# Algorithm Visualizer
 
-button:focus-visible,
-select:focus-visible,
-input:focus-visible {
-  outline: 3px solid var(--color-primary);
-  outline-offset: 2px;
-}
+An interactive, accessible Vanilla JavaScript application for learning sorting, searching, stacks, and queues step by step.
 
-.array-container {
-  min-height: 350px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  gap: 0.5rem;
-  padding: var(--spacing-lg);
-}
+## Features
 
-.array-bar {
-  width: 40px;
-  min-height: 4px;
-  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
-  background: var(--color-primary);
-  transition:
-    height var(--transition-normal),
-    transform var(--transition-fast);
-}
+- Bubble, selection, and insertion sort animations
+- Linear and binary search with target input
+- Stack and queue simulators
+- Pause, resume, step, reset, speed, and array-size controls
+- Pseudocode and complexity panels that update with the selection
+- Dark mode persisted with `localStorage`
+- Keyboard-friendly controls, visible focus styles, live status messages, and reduced-motion support
 
-.array-bar.is-comparing {
-  background: var(--color-warning);
-}
+## Tech stack
 
-.array-bar.is-swapping {
-  background: var(--color-danger);
-  transform: translateY(-8px);
-}
+HTML5, CSS3, JavaScript, Vite, Vitest, Playwright, ESLint, Prettier, and GitHub Actions.
 
-.array-bar.is-sorted {
-  background: var(--color-success);
-}
+## Run locally
 
-/* other styling */
-.toolbar {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
+```bash
+npm install
+npm run dev
+```
 
-.toolbar__row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-}
+Use `npm run check` for linting, unit tests, and a production build. Use `npm run test:e2e` after installing Playwright browsers.
 
-button {
-  padding: 0.7rem 1.2rem;
-  cursor: pointer;
-}
+## Project structure
 
-button:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-</file>
+- `src/algorithms` contains DOM-independent implementations.
+- `src/visualization` renders arrays and structures and manages animation flow.
+- `src/controllers` coordinates UI events and state.
+- `tests` contains unit and end-to-end tests.
+- `.github/workflows` provides quality checks and GitHub Pages deployment.
 
-<file path="src/main.js">
-import "./styles/main.css";
+## Deployment
 
-import { createToolbar } from "./components/toolbar.js";
-import { getControls } from "./components/controls.js";
-import { createAppController } from "./controllers/appController.js";
+Push to `main`, enable GitHub Pages with **GitHub Actions** as its source, and the deployment workflow will publish the Vite build. Set `base` in `vite.config.js` to `/<repository-name>/` if deploying to a project page rather than a custom domain.
 
-// finds div elements with the specified id and show the controls
-const toolbar = document.querySelector("#toolbar");
-toolbar.innerHTML = createToolbar();
+## License
 
-const controls = getControls();
-
-createAppController({
-  container: document.querySelector("#array-container"),
-  controls,
-});
+MIT
 </file>
 
 <file path="index.html">
@@ -1185,51 +1856,127 @@ createAppController({
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
     <meta
       name="description"
-      content="Interactive algorithm and data structure visualizer built with vanilla JavaScript."
+      content="An accessible, interactive visualizer for classic algorithms and data structures."
     />
-
-    <meta name="theme-color" content="#f8fafc" />
-
+    <meta name="theme-color" content="#2563eb" />
     <title>Algorithm Visualizer</title>
   </head>
-
   <body>
-    <header>
-      <nav aria-label="Main navigation">
-        <a href="/" aria-label="Algorithm Visualizer home">
-          Algorithm Visualizer
-        </a>
-      </nav>
+    <header class="site-header">
+      <a class="brand" href="#app">Algorithm Visualizer</a>
+      <button
+        id="theme-toggle"
+        class="icon-button"
+        type="button"
+        aria-pressed="false"
+      >
+        Dark mode
+      </button>
     </header>
-
     <main id="app" class="app">
-      <section class="visualizer">
-        <header class="visualizer__header">
-          <h1>Algorithm Visualizer</h1>
-
-          <p>Explore how classic algorithms work.</p>
-        </header>
-
-        <section id="toolbar" class="toolbar"></section>
-
-        <section class="visualizer__stage">
-          <div id="array-container" class="array-container"></div>
-        </section>
+      <section class="hero" aria-labelledby="page-title">
+        <p class="eyebrow">Interactive computer science learning</p>
+        <h1 id="page-title">See every step of an algorithm.</h1>
+        <p>
+          Choose a sorting or searching algorithm, or practise stack and queue
+          operations.
+        </p>
+      </section>
+      <section class="control-panel surface" aria-label="Visualizer controls">
+        <div class="field">
+          <label for="algorithm-select">Algorithm or data structure</label
+          ><select id="algorithm-select"></select>
+        </div>
+        <div class="field array-only">
+          <label for="array-size"
+            >Array size <output id="array-size-value">20</output></label
+          ><input id="array-size" type="range" min="5" max="50" value="20" />
+        </div>
+        <div class="field array-only">
+          <label for="target-input">Search target</label
+          ><input id="target-input" type="number" value="25" min="1" max="99" />
+        </div>
+        <div class="field">
+          <label for="speed-slider"
+            >Speed <output id="speed-value">5</output></label
+          ><input id="speed-slider" type="range" min="1" max="10" value="5" />
+        </div>
+        <div class="actions">
+          <button id="generate-btn" type="button">Generate array</button
+          ><button id="start-btn" class="primary" type="button">Start</button
+          ><button id="pause-btn" type="button" disabled>Pause</button
+          ><button id="step-btn" type="button" disabled>Step</button
+          ><button id="reset-btn" type="button">Reset</button>
+        </div>
+        <form id="structure-form" class="structure-controls" hidden>
+          <label for="structure-input">Value</label
+          ><input
+            id="structure-input"
+            type="number"
+            value="10"
+            required
+          /><button type="submit" class="primary">Add</button
+          ><button id="remove-btn" type="button">Remove</button
+          ><button id="peek-btn" type="button">Peek/front</button
+          ><button id="clear-btn" type="button">Clear</button>
+        </form>
+      </section>
+      <section
+        class="visualizer-stage surface"
+        aria-labelledby="visualizer-title"
+      >
+        <h2 id="visualizer-title">Visualization</h2>
+        <div
+          id="array-container"
+          class="array-container"
+          aria-label="Algorithm visualization"
+        ></div>
+        <p id="empty-state" class="empty-state" hidden></p>
+      </section>
+      <section class="details-grid">
+        <article class="surface info-panel">
+          <h2 id="info-title">Bubble Sort</h2>
+          <p id="description"></p>
+          <h3>Pseudocode</h3>
+          <pre id="pseudocode"></pre>
+        </article>
+        <article class="surface complexity-panel">
+          <h2>Complexity</h2>
+          <dl id="complexity"></dl>
+        </article>
+      </section>
+      <section
+        class="surface status-panel"
+        aria-label="Current algorithm status"
+      >
+        <strong>Status</strong>
+        <p id="status-message" role="status" aria-live="polite">
+          Ready. Generate an array, then press Start.
+        </p>
       </section>
     </main>
-
     <footer>
-      <p>Algorithm Visualizer</p>
+      Built with Vanilla JavaScript, Vite, Vitest, and Playwright.
     </footer>
-
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
+</file>
+
+<file path="vite.config.js">
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react";
+
+export default defineConfig({
+  plugins: [react()],
+  base: "/algorithm_visualiser/",
+  build: {
+    outDir: "dist",
+  },
+});
 </file>
 
 </files>
