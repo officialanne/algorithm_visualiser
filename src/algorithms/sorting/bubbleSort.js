@@ -14,6 +14,7 @@ export function bubbleSort(array) {
       steps.push({
         type: "compare",
         indices: [j, j + 1],
+        values: [...values],
       });
 
       // swap if the left value is greater than the right value

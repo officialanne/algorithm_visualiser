@@ -16,6 +16,7 @@ export function insertionSort(array) {
       steps.push({
         type: "compare",
         indices: [j, j + 1],
+        values: [...values],
       });
 
       values[j + 1] = values[j];

@@ -12,6 +12,7 @@ export function selectionSort(array) {
       steps.push({
         type: "compare",
         indices: [minimumIndex, j],
+        values: [...values],
       });
 
       // if a smaller element is found, it becomes the new minimum index
@@ -21,6 +22,7 @@ export function selectionSort(array) {
         steps.push({
           type: "minimum",
           index: minimumIndex,
+          values: [...values],
         });
       }
     }

@@ -8,3 +8,35 @@ input:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 2px;
 }
+
+.array-container {
+  min-height: 350px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: var(--spacing-lg);
+}
+
+.array-bar {
+  width: 40px;
+  min-height: 4px;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  background: var(--color-primary);
+  transition:
+    height var(--transition-normal),
+    transform var(--transition-fast);
+}
+
+.array-bar.is-comparing {
+  background: var(--color-warning);
+}
+
+.array-bar.is-swapping {
+  background: var(--color-danger);
+  transform: translateY(-8px);
+}
+
+.array-bar.is-sorted {
+  background: var(--color-success);
+}
